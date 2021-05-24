@@ -26,7 +26,30 @@ def draw_function(surface):
     init_draw(surface)
     init_task()
 
-    pp_1, rad_1, pp_2, rad_2 = find_solution()
+    draw_path(vertexs)
+
+    solve = find_solution()
+    res, err = next(solve)
+    (p_1, rad_1, p_2, rad_2) = res
+    x, y = err
+    while x + y > 1:
+        print(x, y)
+
+        pp_1 = to_window(p_1)
+        pp_2 = to_window(p_2)
+
+        pygame.draw.circle(surface, BLACK, pp_1, rad_1)
+        pygame.draw.circle(surface, BLACK, pp_2, rad_2)
+
+        pygame.display.update()
+
+        res, err = next(solve)
+        (p_1, rad_1, p_2, rad_2) = res
+        print( rad_1 + rad_2)
+        x, y = err
+
+    pp_1 = to_window(p_1)
+    pp_2 = to_window(p_2)
 
     pygame.draw.circle(surface, BLACK, pp_1, rad_1)
     pygame.draw.circle(surface, BLACK, pp_2, rad_2)
@@ -57,44 +80,93 @@ def init_task():
         ( 200,  100),
         ( 200, -100),
     )
-    draw_path(vertexs)
 
 
 def find_solution():
-    res_space = 0
-    res_pp = None_Point
-    res_rad = None
-    res_pp_n = None_Point
-    res_rad_n = None
-    for pp in ppoints():
-        p = to_real(pp)
-        radius = dist_to_shell(p)
-        if radius is not None:
-            for pp_n in ppoints(pp):
-                p_n = to_real(pp_n)
-                radius_n = dist_to_shell(p_n)
-                if radius_n is not None:
-                    dist_2 = distance_2(p, p_n)
-                    if dist_2 > radius * radius:
-                        max_radius_n = math.sqrt(dist_2) - radius
-                        radius_n = min(radius_n, max_radius_n)
-                        space = radius * radius + radius_n * radius_n
-                        if space > res_space:
-                            res_space = space
-                            res_pp = pp
-                            res_rad = radius / draw_scale
-                            res_pp_n = pp_n
-                            res_rad_n = radius_n / draw_scale
-    return res_pp, res_rad, res_pp_n, res_rad_n
+    area1 = area2 = get_simple_area()
+    space = 0
+    res_c1, res_r1, res_c2, res_r2 = None, None, None, None
+    while True:
+        for a1 in split_area(area1):
+            c1 = center(a1)
+            radius1 = dist_to_shell(c1)
+            if radius1 is not None:
+                for a2 in split_area(area2):
+                    c2 = center(a2)
+                    radius2 = dist_to_shell(c2)
+                    if radius2 is not None:
+                        dist_2 = distance_2(c1, c2)
+                        if dist_2 > radius1 * radius1:
+                            radius2_max = math.sqrt(dist_2) - radius1
+                            radius2 = min(radius2, radius2_max)
+                            space_n = radius1 * radius1 + radius2 * radius2
+                            if space_n > space:
+                                res_c1, res_r1, res_c2, res_r2 =\
+                                    c1 ,radius1, c2, radius2
+                                space = space_n
+        yield (res_c1, res_r1, res_c2, res_r2), calc_err(a1)
+        area1 = new_area(c1, area1[1], area2[2])
+        area2 = new_area(c2, area2[1], area2[2])
 
 
-def ppoints(pp_start=(-1, 0)):
-    xx_start, yy_start = pp_start
-    for xx in range(xx_start + 1, width, 10):
-        yield xx, yy_start
-    for yy in range(yy_start + 1, height, 10):
-        for xx in range(0, width, 10):
-            yield xx, yy
+def get_simple_area():
+    l, r = x_max, x_min
+    d, u = y_max, y_min
+    for v in vertexs:
+        x, y = v
+        if x < l:
+            l = x
+        if x > r:
+            r = x
+        if y < d:
+            d = y
+        if y > u:
+            u = y
+    return (l, u), (r - l, 0), (0, d - u)
+
+
+def new_area(center, v1, v2, mult=2/3):
+    x, y = center
+    x1, y1 = v1
+    x1 *= mult
+    y1 *= mult
+    v1 = x1, y1
+    x2, y2 = v2
+    x2 *= mult
+    y2 *= mult
+    v2 = x2, y2
+    start = x - x1 / 2 - x2 / 2, y - y1 / 2 - y2 / 2
+    return start, v1, v2
+
+
+def center(area):
+    start, v1, v2 = area
+    x, y = start
+    x1, y1 = v1
+    x2, y2 = v2
+    return x + x1 / 2 + x2 / 2, y + y1 / 2 + y2 / 2
+
+
+def split_area(area, quality=30):
+    start, v1, v2 = area
+    x, y = start
+    x1, y1 = v1
+    x2, y2 = v2
+    x1_n, y1_n = v1_n = x1 / quality, y1 / quality
+    x2_n, y2_n = v2_n = x2 / quality, y2 / quality
+    for c1 in range(quality):
+        for c2 in range(quality):
+            start_n = x + c1 * x1_n + c2 * x2_n,\
+                      y + c1 * y1_n + c2 * y2_n
+            yield start_n, v1_n, v2_n
+
+
+def calc_err(area):
+    _, v1, v2 = area
+    x1, y1 = v1
+    x2, y2 = v2
+    return x1 + x2, y1 + y2
+
 
 
 def dist_to_shell(p):
@@ -150,8 +222,8 @@ def draw_path(vertexs):
 
 def to_window(p):
     x, y = p
-    xx = (x - x_min) * width // x_range_len
-    yy = (y_max - y) * height // y_range_len
+    xx = (x - x_min) * width / x_range_len
+    yy = (y_max - y) * height / y_range_len
     return xx, yy
 
 
