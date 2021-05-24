@@ -17,10 +17,10 @@ draw_scale = 1
 x_min, y_min = -300, -200
 x_max, y_max = none_point
 
-a = 0
-b = 100
-c = 0
-d = 90
+a = 200
+b = 30
+c = -100
+d = 100
 B = b * b
 D = d * d
 
@@ -73,7 +73,12 @@ def draw_function(_surface):
     last_xx, last_yy = pp = conv_to_window(p)
     *_, = map(draw_point, get_images(pp))
 
-    while last_xx < width and last_yy < height:
+    center_xx, center_yy = conv_to_window((a, c))
+    bound = center_xx + max(center_xx, width - center_xx), center_yy + max(center_yy, height - center_yy)
+    print(bound)
+    print(pp)
+
+    while last_xx < bound[0] and last_yy < bound[1]:
         xx, yy = pp = last_xx + 1, last_yy + 1
         x, y = p = xx * draw_scale + x_min,\
                    y_max - yy * draw_scale

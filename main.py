@@ -1,5 +1,5 @@
 import pygame
-from task_2 import draw_function
+from task_1 import draw_function
 
 FPS = 60
 
