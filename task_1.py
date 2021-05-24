@@ -9,13 +9,6 @@ surface = None
 width = None
 height = None
 
-a = 100
-b = 150
-c = 0
-d = 1
-B = b * b
-D = d * d
-
 
 def f(x):
     return x* math.cos(x / 100)
@@ -24,10 +17,11 @@ def f(x):
 def init_draw(_surface: pygame.Surface):
     global surface, width, height
     surface = _surface
-    surface.fill(WHITE)
     width = surface.get_width()
     height = surface.get_height()
-    
+
+    surface.fill(WHITE)
+
 
 def get_y_range(x_range):
     x_min, x_max = x_range
@@ -49,7 +43,7 @@ def get_y_range(x_range):
                 y_min = y
             if y > y_max:
                 y_max = y
-    return y_min, y_max
+    return y_min, y_max + 1
 
 
 def draw_point(point):
@@ -65,7 +59,7 @@ def draw_function(_surface):
     if y_range is None:
         return
     y_min, y_max = y_range
-    y_range_len = max(y_max - y_min, 1)
+    y_range_len = y_max - y_min
 
     pygame.draw.line(surface, BLACK, (-x_min / x_range_len * width, 0), (-x_min / x_range_len * width, height), 1)
     pygame.draw.line(surface, BLACK, (0, height + y_min / y_range_len * height), (width, height + y_min / y_range_len * height), 1)
@@ -75,10 +69,10 @@ def draw_function(_surface):
         x = x_min + xx * x_range_len / width
         y = f(x)
         if y is not None:
-            yy =  - (y - y_max) * height / y_range_len
+            yy =  - (y - (y_max - 1)) * height / y_range_len
             if last_yy is not None:
                 pygame.draw.line(surface, BLACK, (xx - 1, last_yy), (xx, yy), 1)
             last_yy = yy
         else:
             last_yy = None
-    
+
