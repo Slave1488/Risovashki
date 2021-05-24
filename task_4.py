@@ -30,7 +30,7 @@ new_bot = None,
 
 
 def f(x, y):
-    return math.cos(x * y)
+    return (math.cos(x * (y - 1) / 2) + 1) * math.e ** (x * x / 10) 
 
 
 def draw_function(surface):
