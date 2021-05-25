@@ -32,21 +32,16 @@ def draw_function(surface):
     res, err = next(solve)
     (p_1, rad_1, p_2, rad_2) = res
     x, y = err
-    while x + y > 1:
-        print(x, y)
 
-        pp_1 = to_window(p_1)
-        pp_2 = to_window(p_2)
-
-        pygame.draw.circle(surface, BLACK, pp_1, rad_1)
-        pygame.draw.circle(surface, BLACK, pp_2, rad_2)
-
-        pygame.display.update()
-
+    print(x, y)
+    print(rad_1, rad_2)
+    while x > 1 or y > 1:
         res, err = next(solve)
         (p_1, rad_1, p_2, rad_2) = res
-        print( rad_1 + rad_2)
         x, y = err
+        print('~~~')
+        print(x, y)
+        print(rad_1, rad_2)
 
     pp_1 = to_window(p_1)
     pp_2 = to_window(p_2)
@@ -74,11 +69,10 @@ def init_draw(surface):
 def init_task():
     global vertexs
     vertexs = (
-        (-200, -100),
-        (-200,  100),
-        (   0,  110),
-        ( 200,  100),
-        ( 200, -100),
+        (-150,-100),
+        (-50,200),
+        (250, 50),
+        (250, -200)
     )
 
 
@@ -105,8 +99,8 @@ def find_solution():
                                     c1 ,radius1, c2, radius2
                                 space = space_n
         yield (res_c1, res_r1, res_c2, res_r2), calc_err(a1)
-        area1 = new_area(c1, area1[1], area2[2])
-        area2 = new_area(c2, area2[1], area2[2])
+        area1 = new_area(res_c1, area1[1], area1[2])
+        area2 = new_area(res_c2, area2[1], area2[2])
 
 
 def get_simple_area():
@@ -125,7 +119,7 @@ def get_simple_area():
     return (l, u), (r - l, 0), (0, d - u)
 
 
-def new_area(center, v1, v2, mult=2/3):
+def new_area(center, v1, v2, mult=4/5):
     x, y = center
     x1, y1 = v1
     x1 *= mult
@@ -165,7 +159,7 @@ def calc_err(area):
     _, v1, v2 = area
     x1, y1 = v1
     x2, y2 = v2
-    return x1 + x2, y1 + y2
+    return (abs(x1) + abs(x2)), (abs(y1) + abs(y2))
 
 
 
